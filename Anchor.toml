@@ -6,7 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-counter = "49NcALUBrB68LN1QpgfHB4G4TP6UJuyb7EG9QuwxcTVy"
+simcity_build = "6U4BoX8jTdsJca3N6B1H42x4NkCeMVV667QkDBV8bdKq"
+
+[programs.localnet]
+simcity_build = "6U4BoX8jTdsJca3N6B1H42x4NkCeMVV667QkDBV8bdKq"
 
 [registry]
 url = "https://api.apr.dev"

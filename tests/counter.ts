@@ -2,11 +2,11 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program, web3 } from "@coral-xyz/anchor";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { expect } from "chai";
-import { Counter } from "../target/types/counter";
+import { SimcityBuild } from "../target/types/simcity_build";
 import { GetCommitmentSignature } from "@magicblock-labs/ephemeral-rollups-sdk";
 
-describe("counter", () => {
-  console.log("counter.ts");
+describe("simcity", () => {
+  console.log("simcity.ts");
 
   // Configure the client to use the local cluster
   const provider = anchor.AnchorProvider.env();
@@ -32,17 +32,17 @@ describe("counter", () => {
   );
   console.log(`Current SOL Public Key: ${anchor.Wallet.local().publicKey}`);
 
-  const program = anchor.workspace.Counter as Program<Counter>;
+  const program = anchor.workspace.SimcityBuild as Program<SimcityBuild>;
   const authority = provider.wallet;
 
   // Derive PDA using user's public key
-  const [counterPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [cityPDA] = anchor.web3.PublicKey.findProgramAddressSync(
     [authority.publicKey.toBuffer()],
     program.programId
   );
 
   console.log("Program ID: ", program.programId.toString());
-  console.log("Counter PDA: ", counterPDA.toString());
+  console.log("City PDA: ", cityPDA.toString());
 
   before(async function () {
     const balance = await provider.connection.getBalance(
@@ -55,11 +55,11 @@ describe("counter", () => {
   // Base Layer Tests
   // ========================================
 
-  describe("initialize", () => {
-    it("initializes a counter with count 0", async () => {
+  describe("initialize_city", () => {
+    it("initializes a city", async () => {
       const start = Date.now();
       let tx = await program.methods
-        .initialize()
+        .initializeCity()
         .accounts({
           authority: authority.publicKey,
         })
@@ -74,88 +74,60 @@ describe("counter", () => {
         }
       );
       const duration = Date.now() - start;
-      console.log(`${duration}ms (Base Layer) Initialize txHash: ${txHash}`);
+      console.log(`${duration}ms (Base Layer) Initialize City txHash: ${txHash}`);
 
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      expect(counterAccount.count.toNumber()).to.equal(0);
-      expect(counterAccount.authority.toBase58()).to.equal(
-        authority.publicKey.toBase58()
-      );
+      const cityAccount = await program.account.city.fetch(cityPDA);
+      expect(cityAccount.money.toNumber()).to.equal(10000);
+      expect(cityAccount.population).to.equal(0);
+      // Check if tiles are all 0
+      // anchor returns arrays as normal JS arrays usually
+      const tiles = cityAccount.tiles as number[][];
+      expect(tiles.length).to.equal(16);
+      expect(tiles[0].length).to.equal(16);
+      expect(tiles[0][0]).to.equal(0);
     });
   });
 
-  describe("increment", () => {
-    it("increments the counter by 1", async () => {
+  describe("place_building", () => {
+    it("places a building", async () => {
       const start = Date.now();
-      let tx = await program.methods
-        .increment()
+      const txHash = await program.methods
+        .placeBuilding(5, 5, 2) // x=5, y=5, type=2 (Residential)
+        // @ts-ignore
         .accounts({
-          authority: authority.publicKey,
+          city: cityPDA,
+          signer: authority.publicKey,
+          sessionToken: null,
         })
-        .transaction();
-
-      const txHash = await provider.sendAndConfirm(
-        tx,
-        [provider.wallet.payer],
-        {
-          skipPreflight: true,
-          commitment: "confirmed",
-        }
-      );
+        .rpc();
       const duration = Date.now() - start;
-      console.log(`${duration}ms (Base Layer) Increment txHash: ${txHash}`);
+      console.log(`${duration}ms (Base Layer) Place Building txHash: ${txHash}`);
 
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      expect(counterAccount.count.toNumber()).to.be.greaterThan(0);
-    });
-
-    it("increments multiple times", async () => {
-      const counterBefore = await program.account.counter.fetch(counterPDA);
-      const initialCount = counterBefore.count.toNumber();
-
-      // Increment 3 times
-      for (let i = 0; i < 3; i++) {
-        await program.methods
-          .increment()
-          .accounts({
-            authority: authority.publicKey,
-          })
-          .rpc();
-      }
-
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      expect(counterAccount.count.toNumber()).to.equal(initialCount + 3);
+      const cityAccount = await program.account.city.fetch(cityPDA);
+      const tiles = cityAccount.tiles as number[][];
+      expect(tiles[5][5]).to.equal(2);
+      expect(cityAccount.money.toNumber()).to.equal(9900); // 10000 - 100
     });
   });
 
-  describe("decrement", () => {
-    it("decrements the counter by 1", async () => {
-      const counterBefore = await program.account.counter.fetch(counterPDA);
-      const initialCount = counterBefore.count.toNumber();
-
-      await program.methods
-        .decrement()
+  describe("bulldoze", () => {
+    it("bulldozes a tile", async () => {
+      const start = Date.now();
+      const txHash = await program.methods
+        .bulldoze(5, 5)
+        // @ts-ignore
         .accounts({
-          authority: authority.publicKey,
+          city: cityPDA,
+          signer: authority.publicKey,
+          sessionToken: null,
         })
         .rpc();
+      const duration = Date.now() - start;
+      console.log(`${duration}ms (Base Layer) Bulldoze txHash: ${txHash}`);
 
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      expect(counterAccount.count.toNumber()).to.equal(initialCount - 1);
-    });
-  });
-
-  describe("set", () => {
-    it("sets the counter to a specific value", async () => {
-      await program.methods
-        .set(new anchor.BN(42))
-        .accounts({
-          authority: authority.publicKey,
-        })
-        .rpc();
-
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      expect(counterAccount.count.toNumber()).to.equal(42);
+      const cityAccount = await program.account.city.fetch(cityPDA);
+      const tiles = cityAccount.tiles as number[][];
+      expect(tiles[5][5]).to.equal(0);
     });
   });
 
@@ -164,15 +136,7 @@ describe("counter", () => {
   // ========================================
 
   describe("delegation", () => {
-    it("delegates counter to ER", async () => {
-      // First reset counter to a known value
-      await program.methods
-        .set(new anchor.BN(100))
-        .accounts({
-          authority: authority.publicKey,
-        })
-        .rpc();
-
+    it("delegates city to ER", async () => {
       const start = Date.now();
       // Add local validator identity to remaining accounts if running on localnet
       const remainingAccounts =
@@ -189,33 +153,29 @@ describe("counter", () => {
           ]
           : [];
 
-      let tx = await program.methods
+      const txHash = await program.methods
         .delegate()
+        // @ts-ignore
         .accounts({
           payer: authority.publicKey,
+          pda: cityPDA,
         })
         .remainingAccounts(remainingAccounts)
-        .transaction();
-
-      const txHash = await provider.sendAndConfirm(
-        tx,
-        [provider.wallet.payer],
-        {
-          skipPreflight: true,
-          commitment: "confirmed",
-        }
-      );
+        .rpc();
       const duration = Date.now() - start;
       console.log(`${duration}ms (Base Layer) Delegate txHash: ${txHash}`);
     });
 
-    it("increments counter on ER", async () => {
+    it("places building on ER", async () => {
       const start = Date.now();
       // Build transaction using base program
       let tx = await program.methods
-        .increment()
+        .placeBuilding(3, 3, 3) // x=3, y=3, type=3(Commercial)
+        // @ts-ignore
         .accounts({
-          authority: authority.publicKey,
+          city: cityPDA,
+          signer: authority.publicKey,
+          sessionToken: null,
         })
         .transaction();
 
@@ -234,59 +194,18 @@ describe("counter", () => {
       await providerEphemeralRollup.connection.confirmTransaction(txHash, "confirmed");
 
       const duration = Date.now() - start;
-      console.log(`${duration}ms (ER) Increment txHash: ${txHash}`);
+      console.log(`${duration}ms (ER) Place Building txHash: ${txHash}`);
     });
 
-    it("commits counter state on ER to Solana", async () => {
-      const start = Date.now();
-      // Build transaction using base program
-      let tx = await program.methods
-        .commit()
-        .accounts({
-          payer: providerEphemeralRollup.wallet.publicKey,
-        })
-        .transaction();
-
-      // Set up for ER connection
-      tx.feePayer = providerEphemeralRollup.wallet.publicKey;
-      tx.recentBlockhash = (
-        await providerEphemeralRollup.connection.getLatestBlockhash()
-      ).blockhash;
-      tx = await providerEphemeralRollup.wallet.signTransaction(tx);
-
-      // Send using raw connection to avoid Anchor response parsing issues
-      const txHash = await providerEphemeralRollup.connection.sendRawTransaction(
-        tx.serialize(),
-        { skipPreflight: true }
-      );
-      await providerEphemeralRollup.connection.confirmTransaction(txHash, "confirmed");
-
-      const duration = Date.now() - start;
-      console.log(`${duration}ms (ER) Commit txHash: ${txHash}`);
-
-      // Get the commitment signature on the base layer (may not work on localnet)
-      try {
-        const confirmCommitStart = Date.now();
-        const txCommitSgn = await GetCommitmentSignature(
-          txHash,
-          providerEphemeralRollup.connection
-        );
-        const commitDuration = Date.now() - confirmCommitStart;
-        console.log(
-          `${commitDuration}ms (Base Layer) Commit txHash: ${txCommitSgn}`
-        );
-      } catch (e) {
-        console.log("GetCommitmentSignature not available on localnet (expected)");
-      }
-    });
-
-    it("undelegates counter from ER to Solana", async () => {
+    it("undelegates city from ER to Solana", async () => {
       const start = Date.now();
       // Build transaction using base program
       let tx = await program.methods
         .undelegate()
+        // @ts-ignore
         .accounts({
           payer: providerEphemeralRollup.wallet.publicKey,
+          city: cityPDA,
         })
         .transaction();
 
@@ -307,11 +226,17 @@ describe("counter", () => {
       const duration = Date.now() - start;
       console.log(`${duration}ms (ER) Undelegate txHash: ${txHash}`);
 
-      // Verify the counter was updated
-      // On localnet, the ER state might sync differently, so we check for >= 100
-      const counterAccount = await program.account.counter.fetch(counterPDA);
-      console.log(`Counter value after undelegation: ${counterAccount.count}`);
-      expect(counterAccount.count.toNumber()).to.be.at.least(100);
+      // Verify the city was updated
+      // We placed a building at 3,3 type 3. and we bulldozed 5,5 previously.
+      // And initialized with 10000.
+      // -100 for place 5,5 (then bulldozed).
+      // -100 for place 3,3 on ER.
+      // Total money should be 9800.
+      const cityAccount = await program.account.city.fetch(cityPDA);
+      console.log(`City money after undelegation: ${cityAccount.money}`);
+      expect(cityAccount.money.toNumber()).to.equal(9800);
+      const tiles = cityAccount.tiles as number[][];
+      expect(tiles[3][3]).to.equal(3);
     });
   });
 });
