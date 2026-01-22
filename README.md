@@ -13,18 +13,18 @@ graph TD
     User[User] -->|Plays Game| Frontend[React + Three.js Frontend]
     
     subgraph "Client Side (Rich Simulation)"
-        Frontend -->|Simulates Power/Traffic| GameLoop[Local Game Loop (JS)]
+        Frontend -->|Simulates Power/Traffic| GameLoop["Local Game Loop (JS)"]
         GameLoop -->|Renders| ThreeJS[Three.js Renderer]
     end
     
     subgraph "Blockchain Layer (Authoritative State)"
         Frontend -->|Actions (Place/Bulldoze)| MagicBlock[MagicBlock Ephemeral Rollup]
-        MagicBlock -->|Validates Rules (Rust)| GameState[Game State (ER)]
+        MagicBlock -->|Validates Rules (Rust)| GameState["Game State (ER)"]
         GameState -->|Periodically Settles| SolanaMainnet[Solana Mainnet]
     end
     
     subgraph "Smart Contracts (Anchor)"
-        SolanaMainnet -->|Persists| CityAccount[City Account (On-Chain)]
+        SolanaMainnet -->|Persists| CityAccount["City Account (On-Chain)"]
         CityAccount -->|Stores| TileMap[16x16 Tile Grid]
     end
 ```
