@@ -20,6 +20,7 @@ body {
   background-color: var(--color-bg-navy);
   color: white;
   overflow: hidden;
+  /* Enforce single page */
 }
 
 h1,

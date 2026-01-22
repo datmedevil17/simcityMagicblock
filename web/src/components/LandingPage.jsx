@@ -35,72 +35,82 @@ export function LandingPage({ onEnter, simCity }) {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#0B1220] overflow-y-auto text-white font-['Inter'] selection:bg-cyan-500/30">
-      <div className="relative min-h-screen flex flex-col">
+    <div className="fixed inset-0 w-full h-full bg-[#0B1220] text-white font-['Inter'] selection:bg-cyan-500/30 overflow-hidden">
+      
+      {/* Background Gradients using the existing style but cleaner */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#06b6d4] opacity-[0.08] blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#7c3aed] opacity-[0.08] blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute inset-0 bg-[url('/grid.png')] opacity-[0.04]" />
+      </div>
+
+      {/* Main Centered Content */}
+      <main className="relative w-full h-full flex flex-col items-center justify-center p-6">
+        
+        {/* Glassmorphism Card */}
+        <div className="relative w-full max-w-3xl bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-12 md:p-16 text-center shadow-2xl animate-fade-in-up">
           
-        {/* Ambient Gradients - Fixed */}
-        <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#06b6d4] opacity-[0.05] blur-[120px] rounded-full animate-pulse" />
-           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#7c3aed] opacity-[0.05] blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-           <div className="absolute inset-0 bg-[url('/grid.png')] opacity-[0.03]" />
+          {/* Logo / Title Area */}
+          <div className="mb-10 relative inline-block group">
+            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+            <img 
+              src={titleImg} 
+              alt="SimCity Solana" 
+              className="relative h-24 md:h-32 w-auto mx-auto object-contain drop-shadow-xl transform group-hover:scale-105 transition duration-500"
+            />
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-['Space_Grotesk'] text-transparent bg-clip-text bg-gradient-to-br from-white via-blue-50 to-blue-200 mb-6 tracking-tight leading-tight">
+            Build Your Metropolis<br className="hidden md:block" /> On-Chain
+          </h1>
+
+          {/* Subtext */}
+          <p className="text-lg md:text-xl text-blue-200/70 font-light mb-10 max-w-xl mx-auto leading-relaxed">
+            Experience the first fully decentralized city simulation. <br className="hidden md:block" />
+            Powered by Solana & Ephemeral Rollups.
+          </p>
+
+          {/* CTA Button */}
+          <div className="flex flex-col items-center gap-4">
+            {connected && cityAccount ? (
+              <Button 
+                 onClick={handleAction}
+                 className="min-w-[240px] bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-lg font-semibold py-4 px-8 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                 Enter Simulation
+              </Button>
+            ) : connected && !cityAccount ? (
+              <Button 
+                 onClick={handleAction}
+                 disabled={isLoading}
+                 className="min-w-[240px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-lg font-semibold py-4 px-8 rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                 {isLoading ? 'Initializing...' : 'Initialize City'}
+              </Button>
+            ) : (
+              <Button 
+                  onClick={() => setShowModal(true)}
+                  className="min-w-[240px] bg-white text-slate-900 hover:bg-blue-50 font-bold text-lg py-4 px-8 rounded-xl shadow-xl shadow-white/10 hover:shadow-white/20 transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                  Start Building
+              </Button>
+            )}
+            
+            <span className="text-sm text-blue-300/40 font-mono tracking-wide">
+              {connected ? '● Connected' : 'Live on Devnet • Gas Free'}
+            </span>
+          </div>
         </div>
 
-        {/* HERO SECTION */}
-        <section className="relative w-full max-w-7xl mx-auto px-6 pt-12 pb-20 flex flex-col items-center justify-center min-h-[85vh]">
-          
-          <div className="w-full max-w-4xl mx-auto text-center space-y-8 animate-fade-in-up">
-            {/* Title Image */}
-            <div className="relative w-full max-w-2xl mx-auto transform hover:scale-[1.01] transition-transform duration-500">
-              <div className="absolute inset-0 bg-blue-500/20 blur-[60px] opacity-40 animate-pulse" />
-              <img src={titleImg} alt="Solana SimCity" className="relative w-full h-auto drop-shadow-2xl animate-float" />
-            </div>
+      </main>
 
-            {/* Value Prop */}
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-6xl font-bold font-['Space_Grotesk'] leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200">
-                A blockchain-powered city builder<br/>where every decision is on-chain.
-              </h1>
-              <p className="text-lg md:text-xl text-blue-200/60 max-w-2xl mx-auto font-light">
-                Instant gameplay using Solana + Ephemeral Rollups. Build, Delegate, Dominate.
-              </p>
-            </div>
-
-            {/* Primary CTA */}
-            <div className="pt-4">
-                {connected && cityAccount ? (
-                    <Button 
-                       onClick={handleAction}
-                       className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white text-xl font-bold px-12 py-8 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] transform hover:-translate-y-1 transition-all duration-300"
-                    >
-                       ENTER METROPOLIS ▶
-                    </Button>
-                ) : connected && !cityAccount ? (
-                    <Button 
-                       onClick={handleAction}
-                       disabled={isLoading}
-                       className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xl font-bold px-12 py-8 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_50px_rgba(6,182,212,0.6)] transform hover:-translate-y-1 transition-all duration-300"
-                    >
-                       {isLoading ? 'INITIALIZING...' : 'INITIALIZE CITY 🏗️'}
-                    </Button>
-                ) : (
-                    <Button 
-                        onClick={() => setShowModal(true)}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xl font-bold px-12 py-8 rounded-2xl shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_50px_rgba(6,182,212,0.6)] transform hover:-translate-y-1 transition-all duration-300 group"
-                    >
-                        START BUILDING <span className="ml-2 group-hover:translate-x-1 transition-transform">▶</span>
-                    </Button>
-                )}
-                
-                <p className="mt-4 text-sm text-blue-300/40 font-mono">
-                  {connected ? '● Wallet Connected' : '🚀 Play on Devnet • No Gas Fees'}
-                </p>
-            </div>
-          </div>
-        </section>
-
-   
-
-      </div>
+      {/* Minimal Absolute Footer */}
+      <footer className="absolute bottom-6 w-full text-center">
+        <p className="text-xs text-blue-400/30 font-mono uppercase tracking-widest">
+          Powered by Solana • Built for Hackers
+        </p>
+      </footer>
 
       <WalletModal isOpen={showModal} onClose={() => setShowModal(false)} />
     </div>
