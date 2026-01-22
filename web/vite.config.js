@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default defineConfig({
-  // Set the base directory for GitHub pages
-  base: '/simcity-threejs-clone/',
+  // Set the base directory for Vercel deployment
+  base: '/',
 
   // Set the project root directory (relative to the config file)
   root: './src',
